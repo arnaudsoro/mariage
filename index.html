@@ -448,7 +448,7 @@ footer p.t{font:400 1.5rem/1.3 'Bodoni Moda',serif;font-style:italic}
   var intro = $('#intro'), env = $('#env'), btn = $('#openBtn');
   /* Défilement automatique lent après l'ouverture de l'invitation */
   var autoScrollFrame = null, autoScrollLast = 0, autoScrollPausedUntil = 0;
-  var autoScrollSpeed = 25; // pixels par seconde : augmentez à 25 pour aller plus vite
+  var autoScrollSpeed = 35; // pixels par seconde : augmentez à 25 pour aller plus vite
   function pauseAutoScroll(){ autoScrollPausedUntil = Date.now() + 8000; }
   function autoScrollStep(now){
     if(!autoScrollLast) autoScrollLast = now;
