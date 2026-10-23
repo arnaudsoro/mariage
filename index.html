@@ -446,9 +446,37 @@ footer p.t{font:400 1.5rem/1.3 'Bodoni Moda',serif;font-style:italic}
 
   /* Ouverture de l’enveloppe */
   var intro = $('#intro'), env = $('#env'), btn = $('#openBtn');
+  /* Défilement automatique lent après l'ouverture de l'invitation */
+  var autoScrollFrame = null, autoScrollLast = 0, autoScrollPausedUntil = 0;
+  var autoScrollSpeed = 18; // pixels par seconde : augmentez à 25 pour aller plus vite
+  function pauseAutoScroll(){ autoScrollPausedUntil = Date.now() + 8000; }
+  function autoScrollStep(now){
+    if(!autoScrollLast) autoScrollLast = now;
+    var elapsed = Math.min((now - autoScrollLast) / 1000, 0.05);
+    autoScrollLast = now;
+    if(Date.now() >= autoScrollPausedUntil){
+      var maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      if(window.scrollY < maxScroll - 2){
+        window.scrollTo(0, Math.min(maxScroll, window.scrollY + autoScrollSpeed * elapsed));
+      } else {
+        autoScrollFrame = null;
+        return; // s'arrête en bas de la page
+      }
+    }
+    autoScrollFrame = requestAnimationFrame(autoScrollStep);
+  }
+  function startAutoScroll(){
+    if(autoScrollFrame !== null) return;
+    autoScrollLast = 0;
+    autoScrollFrame = requestAnimationFrame(autoScrollStep);
+  }
+  ['wheel','touchstart','pointerdown','keydown'].forEach(function(evt){
+    addEventListener(evt, pauseAutoScroll, {passive:true});
+  });
+
   function finish(){
     intro.remove(); document.body.classList.remove('locked'); document.body.classList.add('ready');
-    scrollTo(0,0); startReveal(); onScroll();
+    scrollTo(0,0); startReveal(); onScroll(); startAutoScroll();
   }
   btn.addEventListener('click', function(){
     btn.disabled = true;
@@ -462,43 +490,6 @@ footer p.t{font:400 1.5rem/1.3 'Bodoni Moda',serif;font-style:italic}
   btn.focus({preventScroll:true});
 })();
 </script>
-     
-<script>
-(function () {
-  let cible = window.scrollY;
-  let animation = null;
-
-  window.addEventListener("wheel", function (e) {
-    // Garder le comportement normal des gestes tactiles
-    if (e.ctrlKey) return;
-
-    e.preventDefault();
-
-    cible += e.deltaY;
-    cible = Math.max(
-      0,
-      Math.min(cible, document.documentElement.scrollHeight - window.innerHeight)
-    );
-
-    if (animation) cancelAnimationFrame(animation);
-
-    function defiler() {
-      const ecart = cible - window.scrollY;
-
-      if (Math.abs(ecart) < 0.5) {
-        window.scrollTo(0, cible);
-        animation = null;
-        return;
-      }
-
-      window.scrollBy(0, ecart * 0.06);
-      animation = requestAnimationFrame(defiler);
-    }
-
-    animation = requestAnimationFrame(defiler);
-  }, { passive: false });
-})();
-</script>
-
 </body>
 </html>
+
