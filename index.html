@@ -462,5 +462,43 @@ footer p.t{font:400 1.5rem/1.3 'Bodoni Moda',serif;font-style:italic}
   btn.focus({preventScroll:true});
 })();
 </script>
+     
+<script>
+(function () {
+  let cible = window.scrollY;
+  let animation = null;
+
+  window.addEventListener("wheel", function (e) {
+    // Garder le comportement normal des gestes tactiles
+    if (e.ctrlKey) return;
+
+    e.preventDefault();
+
+    cible += e.deltaY;
+    cible = Math.max(
+      0,
+      Math.min(cible, document.documentElement.scrollHeight - window.innerHeight)
+    );
+
+    if (animation) cancelAnimationFrame(animation);
+
+    function defiler() {
+      const ecart = cible - window.scrollY;
+
+      if (Math.abs(ecart) < 0.5) {
+        window.scrollTo(0, cible);
+        animation = null;
+        return;
+      }
+
+      window.scrollBy(0, ecart * 0.06);
+      animation = requestAnimationFrame(defiler);
+    }
+
+    animation = requestAnimationFrame(defiler);
+  }, { passive: false });
+})();
+</script>
+
 </body>
 </html>
