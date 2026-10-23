@@ -452,7 +452,7 @@ footer p.t{font:400 1.5rem/1.3 'Bodoni Moda',serif;font-style:italic}
   function pauseAutoScroll(){ autoScrollPausedUntil = Date.now() + 8000; }
   function autoScrollStep(now){
     if(!autoScrollLast) autoScrollLast = now;
-    var elapsed = Math.min((now - autoScrollLast) / 1000, 0.05);
+    var elapsed = Math.min((now - autoScrollLast) / 1000, 0.10);
     autoScrollLast = now;
     if(Date.now() >= autoScrollPausedUntil){
       var maxScroll = document.documentElement.scrollHeight - window.innerHeight;
