@@ -35,8 +35,8 @@ const SITE = {
   ],
 
   galerieTitre: "Quelques souvenirs",
-  galerie: ["1.png", "2.png", "3.png", "4.png"],
-  photoAccueil: "accueil.png",
+  galerie: ["photos/1.png", "photos/2.png", "photos/3.png", "photos/4.png"],
+  photoAccueil: "photos/accueil.png",
 
   programmeTitre: "Le programme",
   programme: [
@@ -53,7 +53,7 @@ const SITE = {
   tenueTexte: "Élégante et lumineuse. Nous vous invitons à choisir des tons chauds et naturels, et à éviter le blanc.",
   couleurs: [
     { nom: "Terracotta", hex: "#b9532f" },
-    { nom: "Shampagne", hex: "#F7E7CE" },
+    { nom: "Champagne", hex: "#F7E7CE" },
     { nom: "Bleu profond", hex: "#002157" }
   ],
 
@@ -62,8 +62,8 @@ const SITE = {
   rsvpDate: "1er décembre 2026",
   rsvpLien: "https://docs.google.com/forms/d/e/1FAIpQLSeFQx4CQauxEBb_gTwPPCeJxO84TXciiUoA8Vu4pQtnLItb8A/viewform?usp=publish-editor", 
 
-  merci: "Merci de faire partie de notre histoire"
-  audio: "audio/musique.mp3"   // votre musique (facultatif)...
+  merci: "Merci de faire partie de notre histoire",
+  musique: "audio/musique.mp3"   // votre musique (facultatif). Sans ce fichier, une douce mélodie intégrée est jouée
 };
 </script>
 
@@ -180,6 +180,12 @@ footer{padding:4.5rem 1.5rem calc(3.5rem + env(safe-area-inset-bottom));text-ali
 footer .ini{font:4rem/1 'Pinyon Script',cursive;margin:1.4rem 0 .6rem}
 footer p.t{font:400 1.5rem/1.3 'Bodoni Moda',serif;font-style:italic}
 
+/* ---------- Bouton musique ---------- */
+#mus{position:fixed;right:1rem;bottom:calc(1rem + env(safe-area-inset-bottom,0px));z-index:60;width:48px;height:48px;border-radius:50%;border:1px solid rgba(246,238,226,.5);background:rgba(58,33,24,.82);color:var(--cream);font:1.3rem/1 'Bodoni Moda',serif;cursor:pointer;display:none;place-items:center;backdrop-filter:blur(4px);transition:opacity .6s ease}
+.ready #mus{display:grid}
+#mus.off{opacity:.7}
+#mus.off::after{content:"";position:absolute;width:26px;height:1.5px;background:var(--cream);transform:rotate(-45deg)}
+
 /* ---------- Apparitions ---------- */
 .rv{opacity:0;transform:translateY(26px);transition:opacity 1.5s var(--ease),transform 1.5s var(--ease);transition-delay:var(--d,0s)}
 .rv.in{opacity:1;transform:none}
@@ -267,6 +273,7 @@ footer p.t{font:400 1.5rem/1.3 'Bodoni Moda',serif;font-style:italic}
   <div class="ini rv" data-ini2></div>
   <p class="small rv" style="color:#e0a487" data-t="hashtag"></p>
 </footer>
+<button id="mus" type="button" aria-pressed="true" aria-label="Couper la musique">♪</button>
 
 <script>
 (function(){
@@ -349,6 +356,94 @@ footer p.t{font:400 1.5rem/1.3 'Bodoni Moda',serif;font-style:italic}
   addEventListener('scroll', function(){ if(!ticking){ ticking = true; requestAnimationFrame(onScroll); } }, {passive:true});
   addEventListener('resize', onScroll);
 
+  /* Sons et musique */
+  var AC=null, master=null, musicOn=true, started=false, fileAudio=null, genActive=false, genTimer=null, fadeT=null;
+  function initAudio(){
+    try{ AC=new (window.AudioContext||window.webkitAudioContext)(); master=AC.createGain(); master.gain.value=0; master.connect(AC.destination); AC.resume(); }catch(e){ AC=null; }
+  }
+  function noise(dur,shape){
+    var n=Math.floor(AC.sampleRate*dur), b=AC.createBuffer(1,n,AC.sampleRate), d=b.getChannelData(0);
+    for(var i=0;i<n;i++) d[i]=(Math.random()*2-1)*shape(i/n);
+    var s=AC.createBufferSource(); s.buffer=b; return s;
+  }
+  function rustle(){          /* froissement du papier */
+    if(!AC) return;
+    var s=noise(.9,function(x){return Math.pow(Math.random(),2.5)*Math.sin(Math.PI*Math.min(1,x*1.1))});
+    var f=AC.createBiquadFilter(); f.type='highpass'; f.frequency.value=1800;
+    var g=AC.createGain(); g.gain.value=.9;
+    s.connect(f); f.connect(g); g.connect(AC.destination); s.start();
+  }
+  function whoosh(){          /* la carte glisse hors de l’enveloppe */
+    if(!AC) return;
+    var t=AC.currentTime, s=noise(1.3,function(x){return Math.sin(Math.PI*x)});
+    var f=AC.createBiquadFilter(); f.type='bandpass'; f.Q.value=.8;
+    f.frequency.setValueAtTime(700,t); f.frequency.exponentialRampToValueAtTime(2600,t+1.3);
+    var g=AC.createGain(); g.gain.value=.22;
+    s.connect(f); f.connect(g); g.connect(AC.destination); s.start(t);
+  }
+  function chime(){           /* petit carillon final */
+    if(!AC) return;
+    [1318.5,1760,2093].forEach(function(fr,i){
+      var t=AC.currentTime+i*.13, o=AC.createOscillator(), g=AC.createGain();
+      o.type='sine'; o.frequency.value=fr;
+      g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.09,t+.01); g.gain.exponentialRampToValueAtTime(.0001,t+1.8);
+      o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t+1.9);
+    });
+  }
+  function fade(to,sec){      /* 0 = silence, 1 = volume normal */
+    if(master){ var t=AC.currentTime; master.gain.cancelScheduledValues(t); master.gain.setValueAtTime(master.gain.value,t); master.gain.linearRampToValueAtTime(to*.9,t+sec); }
+    if(fileAudio && !genActive){
+      var from=fileAudio.volume, n=0; clearInterval(fadeT);
+      fadeT=setInterval(function(){ n++; fileAudio.volume=Math.max(0,Math.min(1,from+(to*.6-from)*n/20)); if(n>=20) clearInterval(fadeT); }, sec*50);
+    }
+  }
+  function startGen(){        /* mélodie douce intégrée (si aucun fichier musique) */
+    if(genActive||!AC) return; genActive=true;
+    var beat=60/64, chords=[[57,60,64],[53,57,60],[60,64,67],[55,59,62]];
+    var bus=AC.createGain(), dl=AC.createDelay(), fb=AC.createGain(), wet=AC.createGain();
+    dl.delayTime.value=.45; fb.gain.value=.4; wet.gain.value=.5;
+    bus.connect(master); bus.connect(dl); dl.connect(fb); fb.connect(dl); dl.connect(wet); wet.connect(master);
+    function note(m,t,dur,vol,type){
+      var o=AC.createOscillator(), g=AC.createGain();
+      o.type=type; o.frequency.value=440*Math.pow(2,(m-69)/12);
+      g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol,t+.02); g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+      o.connect(g); g.connect(bus); o.start(t); o.stop(t+dur+.05);
+    }
+    var next=AC.currentTime+.1, step=0, arp=[0,1,2,1,2,1,2,1];
+    genTimer=setInterval(function(){
+      while(next<AC.currentTime+1.2){
+        var c=chords[Math.floor(step/8)%4], i=step%8;
+        if(i===0) note(c[0]-12,next,3.6,.09,'sine');
+        note(c[arp[i]]+12,next,1.6,.07,'triangle');
+        if(i%4===0) note(c[2]+24,next,2.4,.035,'sine');
+        next+=beat/2; step++;
+      }
+    },300);
+  }
+  function useGen(){ if(genActive||!AC) return; if(fileAudio) fileAudio.pause(); startGen(); fade(musicOn?1:0,3); }
+  function startMusic(){
+    if(started||(!AC&&!S.musique)) return; started=true;
+    if(!S.musique){ startGen(); }
+    else{
+      fileAudio=new Audio(S.musique); fileAudio.loop=true; fileAudio.volume=0;
+      fileAudio.addEventListener('error',useGen);
+      var p=fileAudio.play(); if(p&&p.catch) p.catch(function(){ if(fileAudio&&fileAudio.error) useGen(); });
+    }
+    setTimeout(function(){ fade(musicOn?1:0,4); },1200);
+  }
+  var mus=$('#mus');
+  mus.addEventListener('click',function(){
+    musicOn=!musicOn; mus.classList.toggle('off',!musicOn);
+    mus.setAttribute('aria-pressed',musicOn); mus.setAttribute('aria-label',musicOn?'Couper la musique':'Activer la musique');
+    if(musicOn&&fileAudio&&!genActive) fileAudio.play().catch(function(){});
+    fade(musicOn?1:0,.8);
+  });
+  document.addEventListener('visibilitychange',function(){
+    if(!started) return;
+    if(document.hidden){ if(fileAudio) fileAudio.pause(); if(AC) AC.suspend(); }
+    else{ if(AC) AC.resume(); if(fileAudio&&musicOn&&!genActive) fileAudio.play().catch(function(){}); }
+  });
+
   /* Ouverture de l’enveloppe */
   var intro = $('#intro'), env = $('#env'), btn = $('#openBtn');
   function finish(){
@@ -357,9 +452,11 @@ footer p.t{font:400 1.5rem/1.3 'Bodoni Moda',serif;font-style:italic}
   }
   btn.addEventListener('click', function(){
     btn.disabled = true;
+    initAudio(); rustle(); startMusic();   /* à faire pendant le clic */
     if(reduce){ finish(); return; }
     env.classList.add('open');
-    setTimeout(function(){ intro.classList.add('leave'); }, 3300);
+    setTimeout(whoosh, 900);
+    setTimeout(function(){ intro.classList.add('leave'); chime(); }, 3300);
     setTimeout(finish, 5000);
   });
   btn.focus({preventScroll:true});
