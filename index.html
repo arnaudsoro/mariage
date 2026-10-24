@@ -62,6 +62,10 @@ const SITE = {
   rsvpDate: "1er décembre 2026",
   rsvpLien: "https://docs.google.com/forms/d/e/1FAIpQLSeFQx4CQauxEBb_gTwPPCeJxO84TXciiUoA8Vu4pQtnLItb8A/viewform?usp=publish-editor", 
 
+  livreTitre: "Livre d’or",
+  livreTexte: "Laissez un petit mot pour les mariés : il apparaîtra juste en dessous.",
+  livreOrUrl: "https://script.google.com/macros/s/AKfycbxU6k2Jv8N54g-031pj1H0qTmNbY5tPsunQIzGyk3m8dbyWQG7CrCSlFzA0sDgtsYbInw/exec",   // lien Google (Apps Script) pour que TOUS les invités voient les messages. Vide = messages gardés sur l’appareil
+
   merci: "Merci de faire partie de notre histoire",
   musique: "musique.mp3"   // votre musique (facultatif). Sans ce fichier, une douce mélodie intégrée est jouée
 };
@@ -148,12 +152,17 @@ h2{font:400 clamp(2.1rem,9vw,3rem)/1.15 'Bodoni Moda',serif;color:var(--brown);m
 .step.in::before{background:var(--terra);transform:scale(1.15)}
 .step h3{font:400 1.6rem/1.2 'Bodoni Moda',serif;color:var(--brown);margin:.3rem 0 .5rem}
 
-/* ---------- Galerie ---------- */
-.gal{display:flex;flex-direction:column;gap:2.2rem;max-width:520px;margin:0 auto}
-.frame{position:relative;overflow:hidden;border-radius:2px;background:var(--sand)}
-.frame img{position:absolute;left:0;top:-10%;width:100%;height:120%;object-fit:cover;will-change:transform}
-.frame:nth-child(odd){aspect-ratio:4/5;width:88%}
-.frame:nth-child(even){aspect-ratio:1/1;width:76%;align-self:flex-end}
+/* ---------- Galerie (carrousel qui tourne de gauche à droite) ---------- */
+.cf{position:relative;perspective:900px;aspect-ratio:1/.9;touch-action:pan-y;user-select:none;-webkit-user-select:none}
+.cs{position:absolute;left:50%;top:50%;width:62%;aspect-ratio:4/5;border-radius:3px;overflow:hidden;background:var(--sand);box-shadow:0 14px 34px rgba(58,33,24,.28);transition:transform 1.4s var(--ease),opacity 1.4s var(--ease);will-change:transform}
+.cs img{width:100%;height:100%;object-fit:cover;pointer-events:none;-webkit-user-drag:none}
+.cf-ui{display:flex;align-items:center;justify-content:center;gap:1.2rem;margin-top:1.4rem}
+.cf-ui>button{width:44px;height:44px;border-radius:50%;border:1px solid var(--terra);background:none;color:var(--terra);font:1.6rem/1 'Bodoni Moda',serif;cursor:pointer;padding:0 0 .2rem;transition:background .5s,color .5s}
+.cf-ui>button:hover{background:var(--terra);color:var(--cream)}
+.cdots{display:flex;gap:.2rem;align-items:center}
+.cd{width:24px;height:24px;border:0;background:none;padding:0;cursor:pointer;position:relative}
+.cd::after{content:"";position:absolute;left:50%;top:50%;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:99px;background:rgba(74,46,34,.3);transition:width .6s var(--ease),margin .6s var(--ease),background .6s}
+.cd.on::after{width:22px;margin-left:-11px;background:var(--terra)}
 
 /* ---------- Programme ---------- */
 .prog{list-style:none;margin:0 auto;padding:0;max-width:460px;text-align:left}
@@ -179,6 +188,21 @@ h2{font:400 clamp(2.1rem,9vw,3rem)/1.15 'Bodoni Moda',serif;color:var(--brown);m
 footer{padding:4.5rem 1.5rem calc(3.5rem + env(safe-area-inset-bottom));text-align:center;background:var(--brown);color:var(--cream);border-top:1px solid rgba(246,238,226,.15)}
 footer .ini{font:4rem/1 'Pinyon Script',cursive;margin:1.4rem 0 .6rem}
 footer p.t{font:400 1.5rem/1.3 'Bodoni Moda',serif;font-style:italic}
+
+/* ---------- Livre d’or ---------- */
+.gb-lead{max-width:30rem;margin:-1rem auto 2rem}
+.gb{display:grid;gap:.9rem;text-align:left}
+.gb input,.gb textarea{width:100%;min-height:50px;padding:.75rem 1rem;border:1px solid rgba(74,46,34,.25);border-radius:4px;background:var(--cream);color:var(--ink);font:400 1rem 'Jost',sans-serif}
+.gb textarea{min-height:120px;resize:vertical}
+.gb-row{display:flex;align-items:center;justify-content:space-between;gap:1rem}
+.gb-row small{color:rgba(74,46,34,.7)}
+.gb-note{min-height:1.5rem;font-size:.95rem;color:var(--terra);text-align:center}
+.gb-list{display:grid;gap:1rem;margin-top:1.6rem;text-align:left}
+.gb-msg{background:var(--cream);border-left:2px solid var(--terra);padding:1.1rem 1.3rem;border-radius:2px;animation:gbin 1s var(--ease)}
+.gb-msg .small{margin-bottom:.4rem}
+.gb-txt{font:italic 400 1.2rem/1.5 'Bodoni Moda',serif;color:var(--brown);overflow-wrap:anywhere;white-space:pre-line}
+.gb-empty{text-align:center;font-style:italic;opacity:.8}
+@keyframes gbin{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 
 /* ---------- Bouton musique ---------- */
 #mus{position:fixed;right:1rem;bottom:calc(1rem + env(safe-area-inset-bottom,0px));z-index:60;width:48px;height:48px;border-radius:50%;border:1px solid rgba(246,238,226,.5);background:rgba(58,33,24,.82);color:var(--cream);font:1.3rem/1 'Bodoni Moda',serif;cursor:pointer;display:none;place-items:center;backdrop-filter:blur(4px);transition:opacity .6s ease}
@@ -239,7 +263,8 @@ footer p.t{font:400 1.5rem/1.3 'Bodoni Moda',serif;font-style:italic}
 
   <section id="galerie" class="alt"><div class="wrap">
     <h2 data-split data-t="galerieTitre"></h2>
-    <div class="gal" id="gal"></div>
+    <div class="cf rv" id="cf" role="region" aria-roledescription="carrousel" aria-label="Galerie photos"></div>
+    <div class="cf-ui"><button id="cprev" type="button" aria-label="Photo précédente">‹</button><div class="cdots" id="cdots"></div><button id="cnext" type="button" aria-label="Photo suivante">›</button></div>
   </div></section>
 
   <section id="programme"><div class="wrap">
@@ -266,6 +291,18 @@ footer p.t{font:400 1.5rem/1.3 'Bodoni Moda',serif;font-style:italic}
     <p class="deadline rv" data-t="rsvpDate"></p>
     <a class="btn light rv" id="rsvpBtn" target="_blank" rel="noopener">Répondre à l’invitation</a>
   </div></section>
+
+  <section id="livre" class="alt"><div class="wrap">
+    <h2 data-split data-t="livreTitre"></h2>
+    <p class="gb-lead rv" data-t="livreTexte"></p>
+    <div class="gb rv">
+      <input id="gb-nom" maxlength="40" placeholder="Votre nom" autocomplete="name" aria-label="Votre nom">
+      <textarea id="gb-msg" maxlength="300" placeholder="Votre message pour les mariés…" aria-label="Votre message"></textarea>
+      <div class="gb-row"><small id="gb-count">0/300</small><button class="btn" id="gb-send" type="button">Laisser mon message</button></div>
+      <p class="gb-note" id="gb-note" role="status"></p>
+    </div>
+    <div class="gb-list" id="gb-list" aria-live="polite"></div>
+  </div></section>
 </main>
 
 <footer>
@@ -281,21 +318,67 @@ footer p.t{font:400 1.5rem/1.3 'Bodoni Moda',serif;font-style:italic}
   var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   var enc = encodeURIComponent, adr = S.salle+', '+S.adresse+', '+S.ville;
 
+  /* Recherche automatique des fichiers : si le dossier ou l'extension diffère, le site essaie les autres possibilités */
+  function cands(path,dirs,exts){
+    var m = path.match(/^(.*\/)?([^\/]*?)(\.[A-Za-z0-9]+)?$/), dir = m[1]||'', base = m[2], ext = m[3]||'', out = [path];
+    [dir].concat(dirs).forEach(function(d){ [ext].concat(exts).forEach(function(x){ var q = d+base+x; if(x && out.indexOf(q)<0) out.push(q); }); });
+    return out;
+  }
+  function smartImg(img,path){
+    var l = cands(path,['photos/','galerie/','images/','img/',''],['.jpg','.jpeg','.png','.webp','.JPG','.JPEG','.PNG']), k = 0;
+    img.onerror = function(){ k++; if(k<l.length) img.src = l[k]; else { img.onerror = null; console.warn('Photo introuvable : '+path); } };
+    img.src = l[0];
+  }
+
   /* Textes simples */
   $$('[data-t]').forEach(function(e){ e.textContent = S[e.dataset.t]; });
   var ini = S.prenom1.charAt(0).toUpperCase()+' & '+S.prenom2.charAt(0).toUpperCase();
   $$('[data-ini]').forEach(function(e){ e.textContent = S.prenom1.charAt(0).toUpperCase()+S.prenom2.charAt(0).toUpperCase(); });
   $$('[data-ini2]').forEach(function(e){ e.textContent = ini; });
   document.title = S.prenom1+' & '+S.prenom2+' · Invitation de mariage';
-  $('#heroImg').src = S.photoAccueil;
+  smartImg($('#heroImg'), S.photoAccueil);
 
   /* Listes */
   $('#tl').insertAdjacentHTML('beforeend', S.histoire.map(function(h,i){
     return '<div class="step rv"><p class="small">'+h.date+'</p><h3>'+h.titre+'</h3><p>'+h.texte+'</p></div>';
   }).join(''));
-  $('#gal').innerHTML = S.galerie.map(function(src,i){
-    return '<div class="frame rv"><img src="'+src+'" alt="Photo '+(i+1)+'" loading="lazy" decoding="async"></div>';
-  }).join('');
+  /* Carrousel : les photos tournent de gauche à droite */
+  var cf = $('#cf'), n = S.galerie.length, cur = 0, pos = [], cInView = true, cPause = 0;
+  var slides = S.galerie.map(function(src,i){
+    var f = document.createElement('div'); f.className = 'cs';
+    var im = document.createElement('img'); smartImg(im, src); im.alt = 'Photo '+(i+1); im.decoding = 'async'; f.appendChild(im); cf.appendChild(f); return f;
+  });
+  $('#cdots').innerHTML = slides.map(function(_,i){ return '<button class="cd" type="button" aria-label="Photo '+(i+1)+'"></button>'; }).join('');
+  var cds = $$('.cd');
+  function place(el,d){
+    var a = Math.abs(d);
+    el.style.transform = 'translate(-50%,-50%) translateX('+(d*72)+'%) rotateY('+(-d*32)+'deg) scale('+(1-.16*Math.min(a,2))+')';
+    el.style.opacity = a>1 ? 0 : (a===0 ? 1 : .6);
+    el.style.zIndex = 10-Math.min(a,5);
+    el.style.pointerEvents = 'none';
+  }
+  function render(step){
+    slides.forEach(function(el,i){
+      var d = ((i-cur)%n+n)%n; if(d>n/2) d -= n;
+      if(pos[i]!==undefined && Math.abs(d-pos[i])>1){ el.style.transition='none'; place(el,d-step); void el.offsetWidth; el.style.transition=''; }
+      place(el,d); pos[i]=d;
+    });
+    cds.forEach(function(x,i){ x.classList.toggle('on', i===cur); });
+  }
+  function goTo(delta){ cur = ((cur+delta)%n+n)%n; render(delta>0?-1:1); }
+  function userPause(){ cPause = Date.now()+8000; }
+  render(1);
+  $('#cprev').onclick = function(){ userPause(); goTo(-1); };
+  $('#cnext').onclick = function(){ userPause(); goTo(1); };
+  cds.forEach(function(x,i){ x.onclick = function(){ userPause(); goTo(i-cur); }; });
+  var sx = null;
+  cf.addEventListener('pointerdown', function(e){ sx = e.clientX; });
+  cf.addEventListener('pointerup', function(e){
+    if(sx===null) return; var dx = e.clientX - sx; sx = null;
+    if(Math.abs(dx)>40){ userPause(); goTo(dx>0 ? -1 : 1); }
+  });
+  if('IntersectionObserver' in window) new IntersectionObserver(function(e){ cInView = e[0].isIntersecting; }).observe(cf);
+  if(!reduce) setInterval(function(){ if(cInView && !document.hidden && Date.now()>=cPause) goTo(-1); }, 3800);
   $('#prog').innerHTML = S.programme.map(function(p){
     return '<li class="rv"><time>'+p.heure+'</time><div><h3>'+p.titre+'</h3><p>'+p.texte+'</p></div></li>';
   }).join('');
@@ -355,6 +438,37 @@ footer p.t{font:400 1.5rem/1.3 'Bodoni Moda',serif;font-style:italic}
   }
   addEventListener('scroll', function(){ if(!ticking){ ticking = true; requestAnimationFrame(onScroll); } }, {passive:true});
   addEventListener('resize', onScroll);
+
+  /* Livre d’or */
+  var gbKey = 'livreor-'+S.prenom1+S.prenom2, gbMsgs = [], gbShared = !!S.livreOrUrl;
+  function gbDate(t){ try{ return new Date(t).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}); }catch(e){ return ''; } }
+  function gbRender(){
+    var box = $('#gb-list'); box.textContent = '';
+    if(!gbMsgs.length){ var p = document.createElement('p'); p.className = 'gb-empty'; p.textContent = 'Soyez le premier à laisser un mot aux mariés.'; box.appendChild(p); return; }
+    gbMsgs.slice(0,50).forEach(function(m){
+      var d = document.createElement('div'), h = document.createElement('p'), t = document.createElement('p');
+      d.className = 'gb-msg'; h.className = 'small'; t.className = 'gb-txt';
+      h.textContent = m.nom+' · '+gbDate(m.date); t.textContent = m.msg;
+      d.appendChild(h); d.appendChild(t); box.appendChild(d);
+    });
+  }
+  if(gbShared){
+    fetch(S.livreOrUrl).then(function(r){ return r.json(); }).then(function(a){
+      if(Array.isArray(a)){ gbMsgs = a.filter(function(m){ return m && m.nom && m.msg; }).sort(function(x,y){ return y.date-x.date; }); gbRender(); }
+    }).catch(function(){});
+  } else { try{ gbMsgs = JSON.parse(localStorage.getItem(gbKey)||'[]'); }catch(e){ gbMsgs = []; } }
+  gbRender();
+  $('#gb-msg').addEventListener('input', function(){ $('#gb-count').textContent = this.value.length+'/300'; });
+  $('#gb-send').addEventListener('click', function(){
+    var nom = $('#gb-nom').value.trim().slice(0,40), msg = $('#gb-msg').value.trim().slice(0,300), note = $('#gb-note'), b = this;
+    if(!nom || !msg){ note.textContent = 'Merci d’écrire votre nom et votre message.'; return; }
+    var m = {nom:nom, msg:msg, date:Date.now()};
+    gbMsgs.unshift(m); gbRender();
+    $('#gb-msg').value = ''; $('#gb-count').textContent = '0/300'; note.textContent = 'Merci pour votre message ♥';
+    b.disabled = true; setTimeout(function(){ b.disabled = false; }, 3000);
+    if(gbShared){ fetch(S.livreOrUrl,{method:'POST',mode:'no-cors',body:JSON.stringify(m)}).catch(function(){ note.textContent = 'Message affiché, mais l’envoi a échoué. Réessayez plus tard.'; }); }
+    else { try{ localStorage.setItem(gbKey, JSON.stringify(gbMsgs.slice(0,50))); }catch(e){} }
+  });
 
   /* Sons et musique */
   var AC=null, master=null, musicOn=true, started=false, fileAudio=null, genActive=false, genTimer=null, fadeT=null;
@@ -425,9 +539,12 @@ footer p.t{font:400 1.5rem/1.3 'Bodoni Moda',serif;font-style:italic}
     if(started||(!AC&&!S.musique)) return; started=true;
     if(!S.musique){ startGen(); }
     else{
-      fileAudio=new Audio(S.musique); fileAudio.loop=true; fileAudio.volume=0;
-      fileAudio.addEventListener('error',useGen);
-      var p=fileAudio.play(); if(p&&p.catch) p.catch(function(){ if(fileAudio&&fileAudio.error) useGen(); });
+      var list=cands(S.musique,['audio/','musique/','sons/',''],['.mp3','.MP3','.m4a','.ogg','.wav']), k=0;
+      fileAudio=new Audio(list[0]); fileAudio.loop=true; fileAudio.volume=0;
+      fileAudio.addEventListener('error',function(){
+        k++; if(k<list.length){ fileAudio.src=list[k]; var q=fileAudio.play(); if(q&&q.catch) q.catch(function(){}); } else useGen();
+      });
+      var p=fileAudio.play(); if(p&&p.catch) p.catch(function(){});
     }
     setTimeout(function(){ fade(musicOn?1:0,4); },1200);
   }
@@ -448,7 +565,7 @@ footer p.t{font:400 1.5rem/1.3 'Bodoni Moda',serif;font-style:italic}
   var intro = $('#intro'), env = $('#env'), btn = $('#openBtn');
   /* Défilement automatique lent après l'ouverture de l'invitation */
   var autoScrollFrame = null, autoScrollLast = 0, autoScrollPausedUntil = 0;
-  var autoScrollSpeed = 70; // pixels par seconde : augmentez à 25 pour aller plus vite
+  var autoScrollSpeed = 70; // pixels par seconde : augmentez pour aller plus vite, diminuez pour ralentir
   function pauseAutoScroll(){ autoScrollPausedUntil = Date.now() + 8000; }
   function autoScrollStep(now){
     if(!autoScrollLast) autoScrollLast = now;
@@ -457,7 +574,7 @@ footer p.t{font:400 1.5rem/1.3 'Bodoni Moda',serif;font-style:italic}
     if(Date.now() >= autoScrollPausedUntil){
       var maxScroll = document.documentElement.scrollHeight - window.innerHeight;
       if(window.scrollY < maxScroll - 2){
-        window.scrollTo(0, Math.min(maxScroll, window.scrollY + autoScrollSpeed * elapsed));
+        window.scrollTo({top: Math.min(maxScroll, window.scrollY + autoScrollSpeed * elapsed), behavior: 'instant'});
       } else {
         autoScrollFrame = null;
         return; // s'arrête en bas de la page
@@ -466,13 +583,15 @@ footer p.t{font:400 1.5rem/1.3 'Bodoni Moda',serif;font-style:italic}
     autoScrollFrame = requestAnimationFrame(autoScrollStep);
   }
   function startAutoScroll(){
-    if(autoScrollFrame !== null) return;
+    if(autoScrollFrame !== null || reduce) return;
     autoScrollLast = 0;
     autoScrollFrame = requestAnimationFrame(autoScrollStep);
   }
   ['wheel','touchstart','pointerdown','keydown'].forEach(function(evt){
     addEventListener(evt, pauseAutoScroll, {passive:true});
   });
+  /* Dès que l'invité écrit dans le livre d'or, le défilement automatique s'arrête pour de bon */
+  addEventListener('focusin', function(e){ if(e.target.closest && e.target.closest('#livre')) autoScrollPausedUntil = Infinity; });
 
   function finish(){
     intro.remove(); document.body.classList.remove('locked'); document.body.classList.add('ready');
@@ -492,4 +611,3 @@ footer p.t{font:400 1.5rem/1.3 'Bodoni Moda',serif;font-style:italic}
 </script>
 </body>
 </html>
-
